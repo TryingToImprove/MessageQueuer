@@ -3,7 +3,7 @@ MessageQueuer
 
 A project which make it simpler to use MSMQ
 
-- Nuget (https://www.nuget.org/packages/MessageQueuer/0.1.0)
+- Nuget (https://www.nuget.org/packages/MessageQueuer)
 
 
 ### Using the library
@@ -48,6 +48,25 @@ A project which make it simpler to use MSMQ
     }
     
 This MqRunner will automatically scan the assemblies for `MqReciever`'s
+    
+### Sender
+     // Using ninject as IoC-container
+    var kernel = new StandardKernel();
 
+    // Setup configuraiton
+    var configuration = new MqConfiguration
+    {
+        // Setup method for constructor injection for the recievers
+        Resolver = (type) => kernel.Get(type)
+    };
+    
+    // Create instance of sender
+    var sender = new MqSender(configuration);
+    
+    // Send the message. For better maintainabilty use a class/struct to mange the queue names
+    sender.Send(".\\PRIVATE$\\console-output", new OutputMessage {
+        Text = "Hello World"
+    });
+    
 ### More info
 Please contact me or open a issue..
