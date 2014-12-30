@@ -15,8 +15,11 @@ namespace MessageQueuer
         private readonly MqRecieverInvoker _recieverInvoker;
         private readonly TypeLocator _typeLocator;
         private readonly IQueueCreator _queueCreator;
-        private readonly IDictionary<string, Type> _recieverDictionary = new ConcurrentDictionary<string, Type>();
+
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        private readonly ConcurrentBag<MqQueue> _queues = new ConcurrentBag<MqQueue>();
+        private readonly ConcurrentBag<MqHandler> _handlers = new ConcurrentBag<MqHandler>();
 
         private bool _isInitialized;
 
@@ -25,7 +28,7 @@ namespace MessageQueuer
             _configuration = configuration;
             _typeLocator = new TypeLocator();
             _queueCreator = configuration.Creator;
-            _recieverInvoker = new MqRecieverInvoker(new InvokerFactory(configuration.Resolver),configuration.Serializer);
+            _recieverInvoker = new MqRecieverInvoker(new InvokerFactory(configuration.Resolver), configuration.Serializer);
         }
 
         public void Start()
@@ -38,82 +41,62 @@ namespace MessageQueuer
             if (!_isInitialized)
                 Initialize();
 
-            Parallel.ForEach(_recieverDictionary, reciever =>
-                Task.Factory.StartNew(() =>
+            Task.Factory.StartNew(() =>
+            {
+                Console.WriteLine("{0}: Starting", GetType().Name);
+                Parallel.ForEach(_queues, queue =>
                 {
-                    using (var messageQueue = _queueCreator.GetOrCreateIfNotExists(reciever.Key))
-                    {
-                        Execute(reciever, messageQueue);
-                    }
-                }, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current)
-                    .ContinueWith(x =>
-                    {
-                        if (onException != null)
-                            onException.Invoke(x.Exception);
+                    var handler = new MqHandler(_configuration, queue, _recieverInvoker);
+                    handler.Start();
 
-                        Stop();
-                    }, TaskContinuationOptions.OnlyOnFaulted));
-        }
-
-        private void Execute(KeyValuePair<string, Type> reciever1, MessageQueue messageQueue)
-        {
-            while (!_cancellationTokenSource.IsCancellationRequested)
+                    _handlers.Add(handler);
+                });
+                Console.WriteLine("{0}: Started, running {1} handlers", GetType().Name, _handlers.Count);
+            }, TaskCreationOptions.LongRunning)
+            .ContinueWith(x =>
             {
-                RecieveMessage(reciever1, messageQueue);
-            }
-        }
+                if (onException != null)
+                    onException.Invoke(x.Exception);
 
-        private void RecieveMessage(KeyValuePair<string, Type> reciever, MessageQueue messageQueue)
-        {
-            try
-            {
-                using (var transaction = new MessageQueueTransaction())
-                {
-                    var message = messageQueue.Receive(TimeSpan.FromSeconds(3), transaction);
-
-                    Invoke(reciever, message);
-                }
-            }
-            catch (MessageQueueException ex)
-            {
-                if (ex.MessageQueueErrorCode != MessageQueueErrorCode.IOTimeout)
-                    throw;
-            }
-        }
-
-        private void Invoke(KeyValuePair<string, Type> reciever, Message message)
-        {
-            if (message == null)
-                throw new ArgumentNullException("message");
-
-            _recieverInvoker.Invoke(reciever.Value, message.BodyStream);
+                Stop();
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public void Stop()
         {
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
+            Console.WriteLine("{0}: Stopping", GetType().Name);
 
-            Console.WriteLine("STOP");
+            foreach (var handler in _handlers)
+            {
+                handler.Stop();
+            }
+
+            Console.WriteLine("{0}: Stopped", GetType().Name);
         }
 
         private void Initialize()
         {
-            var recievers = _typeLocator.Locate<MqRecieverAttribute>();
-
-            foreach (var reciever in recievers.Select(x => new {Attribute = x.Attributes.First(), Type = x.Type}))
+            foreach (var reciever in _typeLocator.Locate<MqRecieverAttribute>())
             {
-                _recieverDictionary.Add(reciever.Attribute.Name, reciever.Type);
+                var queueAttributes = reciever.Attributes
+                    .Where(x => x.GetType() == typeof(MqRecieverAttribute))
+                    .Cast<MqRecieverAttribute>()
+                    .ToArray();
+
+                if (queueAttributes.Count() > 1)
+                    throw new InvalidOperationException(string.Format("Multiple MqRecieverAttribute was found on {0}", reciever.Type.Name));
+
+                var queueAttribute = queueAttributes.First();
+
+                _queues.Add(new MqQueue()
+                {
+                    Name = queueAttribute.Name,
+                    RecieverType = reciever.Type,
+                    Handlers = queueAttribute.Handlers
+                });
             }
 
             _isInitialized = true;
         }
-    }
-
-    public class MqRecieverAttribute : Attribute
-    {
-        public string Name { get; set; }
-
-        public int Handlers { get; set; }
     }
 }

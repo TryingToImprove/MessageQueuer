@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace MessageQueuer.Core
 {
-    internal class TypeResult<T>
+    internal class TypeResult
     {
         public Type Type { get; set; }
 
-        public IEnumerable<T> Attributes { get; set; }
+        public IEnumerable<Object> Attributes { get; set; }
     }
 }
