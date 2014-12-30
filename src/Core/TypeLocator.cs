@@ -6,12 +6,12 @@ namespace MessageQueuer.Core
 {
     internal class TypeLocator
     {
-        private readonly Dictionary<Type, object> _cache = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, IEnumerable<TypeResult>> _cache = new Dictionary<Type, IEnumerable<TypeResult>>();
 
         public IEnumerable<TypeResult> Locate<T>() where T : new()
         {
             if (_cache.ContainsKey(typeof (T)))
-                return (List<TypeResult>) _cache[typeof (T)];
+                return _cache[typeof (T)];
 
             var results = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
                 from type in assembly.GetTypes()

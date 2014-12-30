@@ -45,8 +45,6 @@ namespace MessageQueuer
 
         private async void CreateHandler(int handlerId)
         {
-            Console.WriteLine("Handler #{0}: Starting", handlerId);
-
             using (var messageQueue = _configuration.Creator.GetOrCreateIfNotExists(_queue.Name))
             {
                 while (!_cancellationTokenSource.IsCancellationRequested)

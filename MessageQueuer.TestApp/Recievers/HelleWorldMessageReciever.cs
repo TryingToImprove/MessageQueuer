@@ -8,7 +8,7 @@ using MessageQueuer.TestApp.Messages;
 
 namespace MessageQueuer.TestApp.Recievers
 {
-    [MqReciever(Name = Queues.HelloWorld, Handlers = 3 )]
+    [MqReciever(Name = Queues.HelloWorld, Handlers = 3)]
     class HelleWorldMessageReciever : IMqReciever<HelloWorldMessage>
     {
         public void Invoke(HelloWorldMessage message)

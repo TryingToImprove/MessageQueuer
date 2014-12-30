@@ -2,15 +2,15 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>0.1</version>
+    <version>0.1.1</version>
     <title>MessageQueuer</title>
     <authors>TryingToImprove</authors>
     <owners>Oliver Lassen</owners>
-    <licenseUrl>https://github.com/TryingToImprove/MessageQueuer</licenseUrl>
-    <projectUrl>https://github.com/TryingToImprove/MessageQueuer/blob/master/LICENSE</projectUrl>
+    <licenseUrl>https://github.com/TryingToImprove/MessageQueuer/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/TryingToImprove/MessageQueuer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A project which make it simpler to use MSMQ</description>
-    <releaseNotes>First beta realse</releaseNotes>
+    <releaseNotes>Fix handlers and cleaner code</releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>MSMQ</tags>
   </metadata>

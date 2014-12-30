@@ -14,9 +14,6 @@ namespace MessageQueuer
         private readonly MqConfiguration _configuration;
         private readonly MqRecieverInvoker _recieverInvoker;
         private readonly TypeLocator _typeLocator;
-        private readonly IQueueCreator _queueCreator;
-
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private readonly ConcurrentBag<MqQueue> _queues = new ConcurrentBag<MqQueue>();
         private readonly ConcurrentBag<MqHandler> _handlers = new ConcurrentBag<MqHandler>();
@@ -27,7 +24,6 @@ namespace MessageQueuer
         {
             _configuration = configuration;
             _typeLocator = new TypeLocator();
-            _queueCreator = configuration.Creator;
             _recieverInvoker = new MqRecieverInvoker(new InvokerFactory(configuration.Resolver), configuration.Serializer);
         }
 
@@ -41,37 +37,21 @@ namespace MessageQueuer
             if (!_isInitialized)
                 Initialize();
 
-            Task.Factory.StartNew(() =>
+            Task.Factory.StartNew(() => Parallel.ForEach(_queues, queue =>
             {
-                Console.WriteLine("{0}: Starting", GetType().Name);
-                Parallel.ForEach(_queues, queue =>
-                {
-                    var handler = new MqHandler(_configuration, queue, _recieverInvoker);
-                    handler.Start();
+                var handler = new MqHandler(_configuration, queue, _recieverInvoker);
+                handler.Start();
 
-                    _handlers.Add(handler);
-                });
-                Console.WriteLine("{0}: Started, running {1} handlers", GetType().Name, _handlers.Count);
-            }, TaskCreationOptions.LongRunning)
-            .ContinueWith(x =>
-            {
-                if (onException != null)
-                    onException.Invoke(x.Exception);
-
-                Stop();
-            }, TaskContinuationOptions.OnlyOnFaulted);
+                _handlers.Add(handler);
+            }), TaskCreationOptions.LongRunning);
         }
 
         public void Stop()
         {
-            Console.WriteLine("{0}: Stopping", GetType().Name);
-
             foreach (var handler in _handlers)
             {
                 handler.Stop();
             }
-
-            Console.WriteLine("{0}: Stopped", GetType().Name);
         }
 
         private void Initialize()
