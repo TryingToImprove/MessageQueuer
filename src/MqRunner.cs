@@ -56,7 +56,7 @@ namespace MessageQueuer
                     Stop();
 
                     // Invoke the onException method
-                    if (x.Exception != null)
+                    if (onException != null && x.Exception != null)
                     {
                         var flatException = x.Exception.Flatten();
 
