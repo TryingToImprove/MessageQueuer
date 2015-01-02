@@ -30,7 +30,11 @@ namespace MessageQueuer.TestApp
             runner.Start((exception) =>
             {
                 Console.WriteLine("There was a exception!");
-                Environment.Exit(0);
+
+                Console.WriteLine(exception.Message);
+                if (exception.InnerException != null) Console.WriteLine(exception.InnerException.Message);
+                if (exception.InnerException != null && exception.InnerException.InnerException != null) Console.WriteLine(exception.InnerException.InnerException.Message);
+                //Environment.Exit(0);
             });
 
             Console.WriteLine("Program: Thread #{0}", Thread.CurrentThread.ManagedThreadId);
@@ -80,6 +84,12 @@ namespace MessageQueuer.TestApp
                 if (lastCommand.Equals("Stop", StringComparison.InvariantCultureIgnoreCase))
                 {
                     runner.Stop();
+                    continue;
+                }
+
+                if (lastCommand.Equals("Start", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    runner.Start();
                     continue;
                 }
 

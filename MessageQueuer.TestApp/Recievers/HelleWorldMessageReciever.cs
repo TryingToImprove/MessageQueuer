@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using MessageQueuer.TestApp.Messages;
 
 namespace MessageQueuer.TestApp.Recievers
@@ -11,8 +7,17 @@ namespace MessageQueuer.TestApp.Recievers
     [MqReciever(Name = Queues.HelloWorld, Handlers = 3)]
     class HelleWorldMessageReciever : IMqReciever<HelloWorldMessage>
     {
+        private static int I;
+
         public void Invoke(HelloWorldMessage message)
         {
+            I++;
+
+            if (I > 21)
+            {
+                throw new Exception("TEST");
+            }
+
             var currentType = GetType();
 
             Console.WriteLine("{0}: Thread #{1}", currentType.Name, Thread.CurrentThread.ManagedThreadId);
