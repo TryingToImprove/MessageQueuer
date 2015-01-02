@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>0.1.4</version>
+    <version>0.1.5.1</version>
     <title>MessageQueuer</title>
     <authors>TryingToImprove</authors>
     <owners>Oliver Lassen</owners>
@@ -10,7 +10,11 @@
     <projectUrl>https://github.com/TryingToImprove/MessageQueuer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A project which make it simpler to use MSMQ</description>
-    <releaseNotes>                           
+    <releaseNotes>    
+There were a error when trying to update package, so I have incremented the version to see if thats works.
+
+2. time it will work.. :)
+      
 Improvements:
 * Make it possible to select which queues that should be ran. This is useful for testing
     </releaseNotes>
