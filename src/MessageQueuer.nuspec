@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
     <title>MessageQueuer</title>
     <authors>TryingToImprove</authors>
     <owners>Oliver Lassen</owners>
@@ -10,13 +10,9 @@
     <projectUrl>https://github.com/TryingToImprove/MessageQueuer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A project which make it simpler to use MSMQ</description>
-    <releaseNotes>
-      Improvements:
-      * Use transaction for messages
-
-      Fixes:
-      * The exception handling did not work properly
-      * Remove Ninject as dependency
+    <releaseNotes>                           
+Fixes:
+* Not all assemblies was scanned for recievers
     </releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>MSMQ</tags>
