@@ -6,12 +6,14 @@ namespace MessageQueuer
     {
         public MessageQueue GetOrCreateIfNotExists(string queueName)
         {
-            if (!MessageQueue.Exists(queueName))
-            {
-                MessageQueue.Create(queueName);
-            }
+            if (MessageQueue.Exists(queueName)) return new MessageQueue(queueName);
 
-            return new MessageQueue(queueName) {UseJournalQueue = true, Formatter = new BinaryMessageFormatter()};
+            var queue = MessageQueue.Create(queueName, true);
+            queue.UseJournalQueue = true;
+            queue.Formatter = new BinaryMessageFormatter();
+            queue.DefaultPropertiesToSend.Recoverable = true;
+
+            return new MessageQueue(queueName);
         }
     }
 }

@@ -1,16 +1,15 @@
 ﻿using MessageQueuer.Core;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Messaging;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace MessageQueuer
 {
     public class MqRunner
     {
+        private static readonly object Lock = new object();
+
         private readonly MqConfiguration _configuration;
         private readonly MqRecieverInvoker _recieverInvoker;
         private readonly TypeLocator _typeLocator;
@@ -37,20 +36,54 @@ namespace MessageQueuer
             if (!_isInitialized)
                 Initialize();
 
-            Task.Factory.StartNew(() => Parallel.ForEach(_queues, queue =>
+            Task.Factory.StartNew(() =>
             {
-                var handler = new MqHandler(_configuration, queue, _recieverInvoker);
-                handler.Start();
+                Parallel.ForEach(_queues, (queue, state) =>
+                {
+                    var handler = new MqHandler(_configuration, queue, _recieverInvoker);
+                    handler.Start();
 
-                _handlers.Add(handler);
-            }), TaskCreationOptions.LongRunning);
+                    _handlers.Add(handler);
+                });
+            }, TaskCreationOptions.LongRunning)
+            .ContinueWith(x =>
+            {
+                lock (Lock)
+                {
+                    if (!x.IsFaulted) return;
+
+                    // Lets stop the runner
+                    Stop();
+
+                    // Invoke the onException method
+                    if (x.Exception != null)
+                    {
+                        var flatException = x.Exception.Flatten();
+
+                        if (flatException.InnerException != null && flatException.InnerException.InnerException != null)
+                            onException.Invoke(flatException.InnerException.InnerException);
+                        else if (flatException.InnerException != null)
+                            onException.Invoke(flatException.InnerException);
+                        else
+                            onException.Invoke(flatException);
+                    }
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public void Stop()
         {
-            foreach (var handler in _handlers)
+            while (!_handlers.IsEmpty)
             {
-                handler.Stop();
+                MqHandler handler;
+
+                if (!_handlers.TryTake(out handler))
+                {
+                    break;
+                }
+
+                if (handler.IsRunning)
+                    handler.Stop();
             }
         }
 
@@ -68,7 +101,7 @@ namespace MessageQueuer
 
                 var queueAttribute = queueAttributes.First();
 
-                _queues.Add(new MqQueue()
+                _queues.Add(new MqQueue
                 {
                     Name = queueAttribute.Name,
                     RecieverType = reciever.Type,

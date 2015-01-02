@@ -24,11 +24,17 @@ namespace MessageQueuer
             {
                 _serializer.Serialize(writer, message);
 
-                using (var msg = new Message())
+                using (var tx = new MessageQueueTransaction())
                 {
-                    msg.BodyStream = stream;
+                    tx.Begin();
 
-                    messageQueue.Send(msg);
+                    // I am not sure to weather(?) dispose the message or not..
+                    messageQueue.Send(new Message
+                    {
+                        BodyStream = stream
+                    }, tx);
+
+                    tx.Commit();
                 }
             }
         }
