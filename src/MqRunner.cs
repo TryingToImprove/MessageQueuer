@@ -1,4 +1,5 @@
-﻿using MessageQueuer.Core;
+﻿using System.Collections.Generic;
+using MessageQueuer.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -28,17 +29,29 @@ namespace MessageQueuer
 
         public void Start()
         {
-            Start(null);
+            Start(null, null);
         }
 
         public void Start(Action<Exception> onException)
+        {
+            Start(null, null);
+        }
+
+        public void Start(Action<Exception> onException, string[] queues)
         {
             if (!_isInitialized)
                 Initialize();
 
             Task.Factory.StartNew(() =>
             {
-                Parallel.ForEach(_queues, (queue, state) =>
+                IEnumerable<MqQueue> runableQueues;
+
+                if (queues != null && queues.Length > 0)
+                    runableQueues = _queues.Where(x => queues.Contains(x.Name));
+                else
+                    runableQueues = _queues;
+
+                Parallel.ForEach(runableQueues, (queue, state) =>
                 {
                     var handler = new MqHandler(_configuration, queue, _recieverInvoker);
                     handler.Start();
