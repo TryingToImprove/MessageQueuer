@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
     <title>MessageQueuer</title>
     <authors>TryingToImprove</authors>
     <owners>Oliver Lassen</owners>
@@ -10,8 +10,19 @@
     <projectUrl>https://github.com/TryingToImprove/MessageQueuer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A project which make it simpler to use MSMQ</description>
-    <releaseNotes>Fix handlers and cleaner code</releaseNotes>
+    <releaseNotes>
+      Improvements:
+      * Use transaction for messages
+
+      Fixes:
+      * The exception handling did not work properly
+    </releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>MSMQ</tags>
+    <dependencies>
+      <group>
+        <dependency id="Newtonsoft.Json" version="6.0.6" />
+      </group>
+    </dependencies>
   </metadata>
 </package>
