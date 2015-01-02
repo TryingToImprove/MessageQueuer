@@ -16,13 +16,9 @@
 
       Fixes:
       * The exception handling did not work properly
+      * Remove Ninject as dependency
     </releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>MSMQ</tags>
-    <dependencies>
-      <group>
-        <dependency id="Newtonsoft.Json" version="6.0.6" />
-      </group>
-    </dependencies>
   </metadata>
 </package>
