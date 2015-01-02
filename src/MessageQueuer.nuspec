@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
     <title>MessageQueuer</title>
     <authors>TryingToImprove</authors>
     <owners>Oliver Lassen</owners>
@@ -11,8 +11,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A project which make it simpler to use MSMQ</description>
     <releaseNotes>                           
-Fixes:
-* Not all assemblies was scanned for recievers
+Improvements:
+* Make it possible to select which queues that should be ran. This is useful for testing
     </releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>MSMQ</tags>
