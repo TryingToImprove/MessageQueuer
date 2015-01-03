@@ -18,7 +18,7 @@ namespace MessageQueuer.Core
                 return _cache[typeof(T)];
 
             var results = (from assembly in GetAssemblies()
-                           from type in assembly.GetTypes()
+                           from type in     GetTypesSafely(assembly)
                            let attributes = type.GetCustomAttributes(false)
                            where attributes != null && attributes.Length > 0 && attributes.Any(x => x.GetType() == typeof(T))
                            select new TypeResult
@@ -30,6 +30,18 @@ namespace MessageQueuer.Core
             _cache.Add(typeof(T), results);
 
             return results;
+        }
+
+        private static IEnumerable<Type> GetTypesSafely(Assembly assembly)
+        {
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                return ex.Types.Where(x => x != null);
+            }
         }
 
         private IEnumerable<Assembly> GetAssemblies()
